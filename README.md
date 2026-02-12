@@ -5,13 +5,13 @@ A curated collection of plugins for [Claude Code](https://claude.ai/code). Each 
 ## Adding This Marketplace
 
 ```
-/plugin marketplace add <owner>/<repo>
+/plugin marketplace add RyanJarv/claude
 ```
 
 ## Installing a Plugin
 
 ```
-/plugin install <plugin-name>@<marketplace-name>
+/plugin install <plugin-name>@RyanJarv/claude
 ```
 
 ## Updating
