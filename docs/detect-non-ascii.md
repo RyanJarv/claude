@@ -1,16 +1,16 @@
 # detect-non-ascii — Unicode Character Guard
 
-The **detect-non-ascii** plugin flags non-ASCII characters in tool calls before they execute. It catches curly quotes, em dashes, and other Unicode characters that cause subtle bugs in code and shell commands.
+The **detect-non-ascii** plugin flags non-ASCII characters in Bash tool calls before they execute. It catches curly quotes, em dashes, and other Unicode characters that cause subtle bugs in shell commands.
 
 ## Overview
 
-When Claude uses the Bash, Write, or Edit tools:
+When Claude uses the Bash tool:
 
-1. **PreToolUse** — scans the tool input for non-ASCII characters not in the allowlist
+1. **PreToolUse** — scans the command for non-ASCII characters not in the allowlist
 2. If found — prompts the user to approve or deny the tool call
 3. **PostToolUse** — if approved, auto-adds the characters to a per-project allowlist so they are not flagged again
 
-This prevents a common class of bugs where Unicode look-alikes (curly quotes `''` instead of straight quotes `'`, em dashes `—` instead of hyphens `-`) silently break shell commands, config files, or source code.
+This prevents a common class of bugs where Unicode look-alikes (curly quotes `''` instead of straight quotes `'`, em dashes `—` instead of hyphens `-`) silently break shell commands.
 
 ## Installation
 
@@ -22,9 +22,9 @@ claude plugin install detect-non-ascii@claude-plugins
 
 ### PreToolUse Detection
 
-The hook intercepts Bash, Write, and Edit tool calls. For each call it:
+The hook intercepts Bash tool calls. For each call it:
 
-1. Extracts the relevant text content (command string, file content, or new edit text)
+1. Extracts the command string
 2. Scans for characters with codepoints > 127
 3. Filters out characters already in the project's allowlist
 4. If any remain — returns a `permissionDecision: "ask"` response listing the flagged characters
@@ -36,19 +36,9 @@ Non-ASCII in Bash: '—' (U+2014) ''' (U+2019)
 Yes = always allow, No = deny
 ```
 
-### Edit-Aware Diffing
-
-For Edit tool calls, the hook only flags characters that are **newly introduced**. Characters already present in `old_string` are ignored, preventing false positives when editing files that already contain Unicode.
-
-```
-old_string: "hello — world"
-new_string: "hello — world'"
-              ↑ ignored        ↑ flagged (new)
-```
-
 ### PostToolUse Allowlisting
 
-After an approved tool call completes, the PostToolUse hook scans the output/content for non-ASCII characters and appends any new ones to the allowlist. This means approving a character once permanently allows it for that project.
+After an approved Bash call completes, the PostToolUse hook scans the command output for non-ASCII characters and appends any new ones to the allowlist. This means approving a character once permanently allows it for that project.
 
 ## Per-Project Allowlist
 
@@ -68,14 +58,14 @@ U+2019  # '
 
 ## Hooks Configuration
 
-The plugin registers hooks for three tools across two events:
+The plugin registers hooks for the Bash tool across two events:
 
-| Event | Tools | Behavior |
-|-------|-------|----------|
-| PreToolUse | Bash, Write, Edit | Scan input, prompt if non-ASCII found |
-| PostToolUse | Bash, Write, Edit | Auto-add approved characters to allowlist |
+| Event | Tool | Behavior |
+|-------|------|----------|
+| PreToolUse | Bash | Scan command, prompt if non-ASCII found |
+| PostToolUse | Bash | Auto-add approved characters to allowlist |
 
-All six hook entries invoke the same script: `check-ascii.py`.
+Both hook entries invoke the same script: `check-ascii.py`.
 
 ## Hook Exit Codes
 
@@ -107,7 +97,7 @@ claude --plugin-dir ./plugins/detect-non-ascii
 python3 plugins/detect-non-ascii/scripts/test-check-ascii.py
 ```
 
-The test suite covers: ASCII-only passthrough, non-ASCII detection, multiple character listing, Edit diffing, allowlist filtering, PostToolUse auto-add, allowlist creation, and duplicate prevention.
+The test suite covers: ASCII-only passthrough, non-ASCII detection, multiple character listing, allowlist filtering, PostToolUse auto-add, allowlist creation, and duplicate prevention.
 
 ## Requirements
 

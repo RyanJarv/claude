@@ -136,6 +136,6 @@ See [docs/goals.md](goals.md) for the full reference.
 
 ### detect-non-ascii (Unicode Guard)
 
-The [detect-non-ascii plugin](../plugins/detect-non-ascii/) uses **PreToolUse** and **PostToolUse hooks** to catch non-ASCII characters before they reach Bash, Write, or Edit tools. It prompts for approval and maintains a per-project allowlist so approved characters are never flagged again.
+The [detect-non-ascii plugin](../plugins/detect-non-ascii/) uses **PreToolUse** and **PostToolUse hooks** to catch non-ASCII characters in Bash commands before they execute. It prompts for approval and maintains a per-project allowlist so approved characters are never flagged again.
 
 See [docs/detect-non-ascii.md](detect-non-ascii.md) for the full reference.
