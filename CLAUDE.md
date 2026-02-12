@@ -73,8 +73,17 @@ claude plugin validate .                                  # Validate marketplace
 /plugin marketplace update                             # Update catalog
 ```
 
+## Included Plugins
+
+| Plugin | Description | Docs |
+|--------|-------------|------|
+| [goals](plugins/goals/) | Declarative verification loops — prevents Claude from stopping until preconditions are verified | [docs/goals.md](docs/goals.md) |
+| [detect-non-ascii](plugins/detect-non-ascii/) | Flags non-ASCII characters in tool calls before execution | [docs/detect-non-ascii.md](docs/detect-non-ascii.md) |
+
 ## Reference
 
 - [Component comparison & decision guide](docs/components.md)
 - [Marketplace & plugin.json schema](docs/marketplace-schema.md)
+- [Goals system — verification loops](docs/goals.md)
+- [detect-non-ascii — Unicode character guard](docs/detect-non-ascii.md)
 - Templates: `templates/` directory

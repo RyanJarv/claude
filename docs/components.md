@@ -123,3 +123,19 @@ Should the user explicitly trigger it?
 | Mechanism | Shell commands on events | Persistent tool servers |
 | Use when | Reacting to lifecycle events | Providing new tool capabilities |
 | Example | Validate files before write | Query a database |
+
+## Multi-Component Patterns
+
+Some plugins combine several component types to implement higher-level behavior.
+
+### Goals (Verification Loops)
+
+The [goals plugin](../plugins/goals/) combines **commands** + **hooks** + **skills** to create declarative verification loops. A Stop hook runs prechecks before Claude can stop, commands let users manage goals, and a skill provides context-aware guidance.
+
+See [docs/goals.md](goals.md) for the full reference.
+
+### detect-non-ascii (Unicode Guard)
+
+The [detect-non-ascii plugin](../plugins/detect-non-ascii/) uses **PreToolUse** and **PostToolUse hooks** to catch non-ASCII characters before they reach Bash, Write, or Edit tools. It prompts for approval and maintains a per-project allowlist so approved characters are never flagged again.
+
+See [docs/detect-non-ascii.md](detect-non-ascii.md) for the full reference.
