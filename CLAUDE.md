@@ -9,7 +9,6 @@ A **Claude Code plugin marketplace** — a catalog of installable plugins bundli
 # ... add commands, skills, hooks ...
 claude --plugin-dir ./plugins/my-plugin   # Test locally
 /register my-plugin           # Add to marketplace.json
-/validate-plugin my-plugin    # Check quality standards
 ```
 
 ## Repository Structure
@@ -57,7 +56,6 @@ See [docs/components.md](docs/components.md) for a decision guide on choosing be
 |---------|---------|
 | `/scaffold <name>` | Create a new plugin with standard structure |
 | `/register <name>` | Add/update plugin entry in marketplace.json |
-| `/validate-plugin <name>` | Check plugin against quality standards |
 
 ## Testing
 
