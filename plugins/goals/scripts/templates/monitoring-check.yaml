@@ -1,0 +1,61 @@
+# Monitoring check goal
+# Verifies that expected services are running and healthy.
+
+name: monitoring-check
+description: Verify all monitored services are running and healthy
+
+vars:
+  project: my-project
+
+# Named list for expect_all_active
+expected_services:
+  - service-a
+  - service-b
+  - service-c
+
+prechecks:
+  - name: All services active
+    type: expect_all_active
+    command: 'echo "service-a ACTIVE\nservice-b ACTIVE\nservice-c ACTIVE"'  # Replace with your service status command
+    expected_list: expected_services
+    fail_message: |
+      Missing services: ${MISSING}. Deploy or start the missing services.
+    inactive_message: |
+      Services not healthy: ${INACTIVE}. Check service logs for errors.
+    extra_message: |
+      Found ${DEPLOYED_COUNT} services but expected ${EXPECTED_COUNT}.
+      Unexpected services: ${EXTRA}. These may be old deployments.
+
+  - name: No recent errors
+    type: reject_pattern
+    command: 'echo "all ok"'  # Replace with your log check command
+    reject_pattern: ERROR|CRITICAL
+    fail_message: |
+      Recent logs contain errors. Investigate and fix before proceeding.
+
+success_phrases:
+  - all services verified
+  - monitoring complete
+  - all healthy
+  - verification complete
+
+instructions: |
+  All ${EXPECTED_COUNT} services are running and ACTIVE. Now verify each is functioning correctly.
+
+  **Phase 1 — Check service logs for errors:**
+  For each service, review recent logs and fix any issues found.
+
+  **Phase 2 — Verify health endpoints:**
+  Hit each service's health endpoint to confirm it responds correctly.
+
+  **Phase 3 — Fix any issues found:**
+  Address any problems discovered during verification.
+
+command:
+  title: Monitoring Check
+  summary: Verify all monitored services are running and healthy.
+  workflow: |
+    1. Check all services are deployed and active
+    2. Review service logs for errors
+    3. Verify health endpoints
+    4. Fix any issues

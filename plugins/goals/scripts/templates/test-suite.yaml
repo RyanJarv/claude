@@ -1,0 +1,44 @@
+# Test suite goal
+# Runs tests, identifies failures, fixes them, and re-runs in a loop.
+
+name: test-suite
+description: Run tests, fix failures, and verify fixes in a loop
+
+prechecks:
+  - name: Test suite passes
+    type: reject_pattern
+    command: 'make test 2>&1 || true'  # Replace with your test command
+    reject_pattern: 'FAIL|FAILED|ERROR|error'
+    fail_message: |
+      Test suite has failures. Analyze the output, fix the issues, and re-run.
+
+success_phrases:
+  - all tests pass
+  - all passing
+  - test suite passed
+  - 0 failed
+
+instructions: |
+  Run the full test suite and fix any failures iteratively.
+
+  **Your workflow:**
+  1. Run tests to see current failures
+  2. Analyze each failure — is the code wrong or the test wrong?
+  3. Fix the issue (code or test)
+  4. Re-run only the affected test first
+  5. Once it passes, run the full suite to check for regressions
+  6. Repeat until all tests pass
+
+  **Safety rules:**
+  - Only fix code that is clearly broken — do not refactor
+  - If a failure is ambiguous, ask the user
+  - Keep fixes minimal and focused
+
+command:
+  title: Test Suite
+  summary: Start an iterative test-fix loop.
+  workflow: |
+    1. Run all tests
+    2. Analyze failures
+    3. Fix and re-test
+    4. Repeat until all pass

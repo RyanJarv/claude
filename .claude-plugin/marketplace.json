@@ -12,6 +12,12 @@
       "source": "./plugins/detect-non-ascii",
       "version": "0.1.0",
       "description": "Flags non-ASCII characters in tool calls (Bash, Write, Edit) before they execute. Prompts for approval and maintains a per-project allowlist."
+    },
+    {
+      "name": "goals",
+      "source": "./plugins/goals",
+      "version": "0.1.0",
+      "description": "Declarative goal loops — prevents Claude from stopping until preconditions are verified"
     }
   ]
 }

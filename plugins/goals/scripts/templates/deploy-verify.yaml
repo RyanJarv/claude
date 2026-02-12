@@ -1,0 +1,65 @@
+# Deploy verification goal
+# Verifies a deployment by checking HTTP health, build status, and running
+# browser-based user flow tests.
+
+name: deploy-verify
+description: Deploy and verify the environment is fully working
+
+vars:
+  project: my-project
+  url: https://example.com
+
+prechecks:
+  - name: Build status
+    type: match
+    command: 'echo "SUCCESS"'  # Replace with your build status command
+    success: SUCCESS
+    fail_on: [FAILURE, TIMEOUT, CANCELLED]
+    wait_on: [WORKING, QUEUED, PENDING]
+    fail_message: |
+      Latest build status is ${RESULT}. Fix build issues and redeploy.
+    wait_message: |
+      Build is currently in progress (status: ${RESULT}). Waiting for completion.
+
+  - name: Site responds
+    type: match
+    command: 'curl -s -o /dev/null -w "%{http_code}" --max-time 30 "${url}/" 2>/dev/null || echo "000"'
+    success: "200"
+    fail_message: |
+      Site returned HTTP ${RESULT}. Check for runtime errors and fix.
+
+  - name: API health
+    type: match
+    command: 'curl -s --max-time 10 "${url}/api/health" 2>/dev/null | head -1'
+    success: '{"status":"ok"}'
+    fail_message: |
+      API health endpoint did not return expected JSON. Got: ${RESULT}
+
+success_phrases:
+  - verification complete
+  - all tests pass
+  - site working
+  - successfully tested
+
+instructions: |
+  Basic health checks passed (site and API responding at ${url}).
+  Now verify the site works by testing key user flows.
+
+  If any flow fails, fix the issue and redeploy.
+  If ALL flows work correctly, you may stop.
+
+command:
+  title: Deploy Verification
+  summary: Deploy and verify the environment is fully working.
+  workflow: |
+    ### 1. Check build status
+    Verify the latest build succeeded.
+
+    ### 2. Test health endpoints
+    Confirm site and API respond correctly.
+
+    ### 3. Run user flow tests
+    Test critical user flows in the browser.
+
+    ### 4. Fix any issues
+    Fix problems found and redeploy.
