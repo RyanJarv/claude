@@ -1,5 +1,7 @@
 # Goals Plugin
 
+**IMPORTANT: Use at your own risk, assume this has no testing at all**
+
 Declarative goal loops for Claude Code — prevents Claude from stopping until preconditions are verified.
 
 ## What Are Goals?
