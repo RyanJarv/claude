@@ -1,3 +1,5 @@
+**NOTE:** This is a WIP, don't depend on it behaving as expected right now.
+
 # Claude Code Plugin Marketplace
 
 A curated collection of plugins for [Claude Code](https://claude.ai/code). Each plugin bundles commands, skills, agents, hooks, and/or MCP server configurations that can be installed into any project.
