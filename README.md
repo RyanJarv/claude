@@ -1,4 +1,4 @@
-**NOTE:** This is a WIP, don't depend on it behaving as expected right now.
+**NOTE:** This is a WIP project, don't depend on it behaving as expected right now.
 
 # Claude Code Plugin Marketplace
 
