@@ -1,35 +1,41 @@
 #!/usr/bin/env node
 
 /**
- * Show status of the active goal, including precheck results.
+ * Show status of active goals, including precheck results.
  */
 
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { getActiveGoal, getIterations, getGoalsDir } from './lib/state-manager.mjs';
+import { getAllActiveGoals, getIterations, getGoalsDir } from './lib/state-manager.mjs';
 import { loadGoal } from './lib/yaml-parser.mjs';
 import { runPrecheck } from './lib/precheck-runner.mjs';
 
 async function main() {
-  const activeGoal = getActiveGoal();
+  const activeGoals = getAllActiveGoals();
 
-  if (!activeGoal) {
+  if (activeGoals.length === 0) {
     console.log('No goal is currently active.');
     return;
   }
 
-  console.log(`Active goal: ${activeGoal.name}`);
-  if (activeGoal.ownerSession) {
-    console.log(`Session: ${activeGoal.ownerSession}`);
-    const iterations = getIterations(activeGoal.ownerSession);
-    console.log(`Iterations: ${iterations}`);
+  for (const goal of activeGoals) {
+    console.log(`Active goal: ${goal.name}`);
+    if (goal.pending) {
+      console.log(`  Status: pending (not yet claimed by a session)`);
+    } else {
+      console.log(`  Session: ${goal.sessionId}`);
+      const iterations = getIterations(goal.sessionId);
+      console.log(`  Iterations: ${iterations}`);
+    }
   }
 
+  // Run precheck display for the first goal found
+  const firstGoal = activeGoals[0];
   const goalsDir = getGoalsDir();
-  const goalPath = join(goalsDir, `${activeGoal.name}.yaml`);
+  const goalPath = join(goalsDir, `${firstGoal.name}.yaml`);
 
   if (!existsSync(goalPath)) {
-    console.log(`\nWarning: Goal definition not found at .goals/${activeGoal.name}.yaml`);
+    console.log(`\nWarning: Goal definition not found at .goals/${firstGoal.name}.yaml`);
     return;
   }
 
@@ -49,6 +55,10 @@ async function main() {
 
   console.log(`\nPrecheck status (${prechecks.length} checks):\n`);
 
+  const iterCount = (!firstGoal.pending && firstGoal.sessionId)
+    ? getIterations(firstGoal.sessionId)
+    : 0;
+
   const goalVars = goalDef.vars || {};
   let runtimeVars = {
     RESULT: '',
@@ -57,7 +67,7 @@ async function main() {
     EXTRA: '',
     EXPECTED_COUNT: '',
     DEPLOYED_COUNT: '',
-    ITERATIONS: activeGoal.ownerSession ? getIterations(activeGoal.ownerSession) : 0,
+    ITERATIONS: iterCount,
     MAX_ITERATIONS: maxIterations,
   };
 

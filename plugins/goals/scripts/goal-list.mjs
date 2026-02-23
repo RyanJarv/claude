@@ -1,17 +1,18 @@
 #!/usr/bin/env node
 
 /**
- * List all available goals and show the currently active one.
+ * List all available goals and show currently active ones.
  */
 
 import { existsSync, readdirSync } from 'fs';
 import { join } from 'path';
-import { getActiveGoal, getGoalsDir } from './lib/state-manager.mjs';
+import { getAllActiveGoals, getGoalsDir } from './lib/state-manager.mjs';
 import { loadGoal } from './lib/yaml-parser.mjs';
 
 async function main() {
   const goalsDir = getGoalsDir();
-  const activeGoal = getActiveGoal();
+  const activeGoals = getAllActiveGoals();
+  const activeNames = new Set(activeGoals.map(g => g.name));
 
   if (!existsSync(goalsDir)) {
     console.log('No .goals/ directory found. Create goals with /goals:new');
@@ -29,7 +30,7 @@ async function main() {
 
   for (const file of files) {
     const name = file.replace('.yaml', '');
-    const isActive = activeGoal && activeGoal.name === name;
+    const isActive = activeNames.has(name);
     const marker = isActive ? ' [ACTIVE]' : '';
 
     try {
@@ -47,10 +48,14 @@ async function main() {
     }
   }
 
-  if (activeGoal) {
-    console.log(`Currently active: ${activeGoal.name}`);
-    if (activeGoal.ownerSession) {
-      console.log(`  Session: ${activeGoal.ownerSession}`);
+  if (activeGoals.length > 0) {
+    console.log('Currently active:');
+    for (const goal of activeGoals) {
+      if (goal.pending) {
+        console.log(`  ${goal.name} (pending — not yet claimed by a session)`);
+      } else {
+        console.log(`  ${goal.name} (session: ${goal.sessionId})`);
+      }
     }
   }
 }

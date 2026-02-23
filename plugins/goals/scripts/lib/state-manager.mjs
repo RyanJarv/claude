@@ -22,40 +22,117 @@ function getStateDir() {
   return dir;
 }
 
-const FLAG_FILE = 'active-goal';
+// --- Pending goal (written by commands, consumed by hooks) ---
 
-export function getActiveGoal() {
+export function setPendingGoal(name) {
   const dir = getStateDir();
-  const flagPath = join(dir, FLAG_FILE);
-  if (!existsSync(flagPath)) return null;
+  writeFileSync(join(dir, 'pending-goal'), name + '\n');
+}
 
-  const lines = readFileSync(flagPath, 'utf8').trim().split('\n');
-  const name = lines[0] || '';
-  const ownerSession = lines[1] || '';
+export function getPendingGoal() {
+  const dir = getStateDir();
+  const p = join(dir, 'pending-goal');
+  if (!existsSync(p)) return null;
+  const name = readFileSync(p, 'utf8').trim();
+  return name || null;
+}
 
-  if (!name) {
-    unlinkSync(flagPath);
-    return null;
+export function clearPendingGoal() {
+  const dir = getStateDir();
+  const p = join(dir, 'pending-goal');
+  try { unlinkSync(p); } catch {}
+}
+
+// --- Session-scoped goal state ---
+
+export function getSessionGoal(sessionId) {
+  const dir = getStateDir();
+  const p = join(dir, `active-goal-${sessionId}`);
+  if (!existsSync(p)) return null;
+  const name = readFileSync(p, 'utf8').trim();
+  return name || null;
+}
+
+export function setSessionGoal(sessionId, name) {
+  const dir = getStateDir();
+  writeFileSync(join(dir, `active-goal-${sessionId}`), name + '\n');
+}
+
+export function clearSessionGoal(sessionId) {
+  const dir = getStateDir();
+  const p = join(dir, `active-goal-${sessionId}`);
+  try { unlinkSync(p); } catch {}
+}
+
+/**
+ * Atomically claim the pending goal for this session.
+ * Returns the goal name if claimed, null otherwise.
+ */
+export function claimPendingGoal(sessionId) {
+  const name = getPendingGoal();
+  if (!name) return null;
+  setSessionGoal(sessionId, name);
+  clearPendingGoal();
+  return name;
+}
+
+// --- Session cleanup ---
+
+export function cleanupSession(sessionId) {
+  const dir = getStateDir();
+  const goalPath = join(dir, `active-goal-${sessionId}`);
+  const iterPath = join(dir, `iterations-${sessionId}`);
+  try { unlinkSync(goalPath); } catch {}
+  try { unlinkSync(iterPath); } catch {}
+}
+
+// --- Multi-session queries ---
+
+/**
+ * Scan directory for all active goals (session-scoped + pending).
+ * Returns array of { name, sessionId, pending }.
+ */
+export function getAllActiveGoals() {
+  const dir = getStateDir();
+  const results = [];
+
+  try {
+    const files = readdirSync(dir);
+    for (const f of files) {
+      if (f.startsWith('active-goal-')) {
+        const sessionId = f.slice('active-goal-'.length);
+        const name = readFileSync(join(dir, f), 'utf8').trim();
+        if (name) {
+          results.push({ name, sessionId, pending: false });
+        }
+      }
+    }
+  } catch {}
+
+  const pending = getPendingGoal();
+  if (pending) {
+    results.push({ name: pending, sessionId: null, pending: true });
   }
 
-  return { name, ownerSession: ownerSession || null };
+  return results;
 }
 
-export function setActiveGoal(name, sessionId) {
+/**
+ * Delete all goal state: active-goal-*, iterations-*, pending-goal.
+ */
+export function cleanupAll() {
   const dir = getStateDir();
-  const flagPath = join(dir, FLAG_FILE);
-  let content = name;
-  if (sessionId) {
-    content += '\n' + sessionId;
-  }
-  writeFileSync(flagPath, content + '\n');
+  try {
+    const files = readdirSync(dir);
+    for (const f of files) {
+      if (f.startsWith('active-goal-') || f.startsWith('iterations-') || f === 'pending-goal') {
+        try { unlinkSync(join(dir, f)); } catch {}
+      }
+    }
+  } catch {}
 }
 
-export function claimSession(sessionId) {
-  const goal = getActiveGoal();
-  if (!goal) return;
-  setActiveGoal(goal.name, sessionId);
-}
+// --- Iterations (unchanged, already per-session) ---
 
 export function getIterations(sessionId) {
   const dir = getStateDir();
@@ -71,26 +148,7 @@ export function setIterations(sessionId, count) {
   writeFileSync(iterPath, String(count) + '\n');
 }
 
-export function cleanup(sessionId) {
-  const dir = getStateDir();
-  const flagPath = join(dir, FLAG_FILE);
-  if (existsSync(flagPath)) unlinkSync(flagPath);
-
-  if (sessionId) {
-    const iterPath = join(dir, `iterations-${sessionId}`);
-    if (existsSync(iterPath)) unlinkSync(iterPath);
-  }
-
-  // Clean up any orphaned iteration files
-  try {
-    const files = readdirSync(dir);
-    for (const f of files) {
-      if (f.startsWith('iterations-')) {
-        try { unlinkSync(join(dir, f)); } catch {}
-      }
-    }
-  } catch {}
-}
+// --- Directory helpers (unchanged) ---
 
 export function getGoalsDir() {
   try {

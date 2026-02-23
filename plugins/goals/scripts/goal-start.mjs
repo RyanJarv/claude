@@ -8,7 +8,7 @@
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { readdirSync } from 'fs';
-import { setActiveGoal, getGoalsDir } from './lib/state-manager.mjs';
+import { setPendingGoal, getGoalsDir } from './lib/state-manager.mjs';
 import { loadGoal } from './lib/yaml-parser.mjs';
 import { validateGoal } from './lib/schema.mjs';
 
@@ -58,7 +58,7 @@ async function main() {
   }
 
   // Activate
-  setActiveGoal(goalName);
+  setPendingGoal(goalName);
 
   const precheckCount = (goalDef.prechecks || []).length;
   console.log(`Goal '${goalName}' activated.`);

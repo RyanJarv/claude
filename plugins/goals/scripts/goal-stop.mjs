@@ -2,21 +2,24 @@
 
 /**
  * Deactivate the current goal.
+ * Since commands don't receive session IDs, this cleans up ALL goal state
+ * (pending + all session-scoped files). This is appropriate because it's
+ * an explicit user action.
  */
 
-import { getActiveGoal, cleanup } from './lib/state-manager.mjs';
+import { getAllActiveGoals, cleanupAll } from './lib/state-manager.mjs';
 
 function main() {
-  const activeGoal = getActiveGoal();
+  const activeGoals = getAllActiveGoals();
 
-  if (!activeGoal) {
+  if (activeGoals.length === 0) {
     console.log('No goal is currently active.');
     return;
   }
 
-  const name = activeGoal.name;
-  cleanup(activeGoal.ownerSession);
-  console.log(`Goal '${name}' deactivated. Stop hook will no longer block.`);
+  const names = [...new Set(activeGoals.map(g => g.name))];
+  cleanupAll();
+  console.log(`Goal '${names.join(', ')}' deactivated. Stop hook will no longer block.`);
 }
 
 main();

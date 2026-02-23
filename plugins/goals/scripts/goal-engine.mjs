@@ -11,7 +11,7 @@
 
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { getActiveGoal, claimSession, getIterations, setIterations, cleanup, getGoalsDir } from './lib/state-manager.mjs';
+import { getSessionGoal, claimPendingGoal, getIterations, setIterations, cleanupSession, getGoalsDir } from './lib/state-manager.mjs';
 import { loadGoal } from './lib/yaml-parser.mjs';
 import { validateGoal } from './lib/schema.mjs';
 import { runPrecheck } from './lib/precheck-runner.mjs';
@@ -43,14 +43,18 @@ async function main() {
   const stopHookActive = context.stop_hook_active ?? false;
   const transcriptSummary = context.transcript_summary || '';
 
-  // No active goal? Exit silently (exit 0 = no opinion)
-  const activeGoal = getActiveGoal();
-  if (!activeGoal) {
-    process.exit(0);
+  // Check if this session already has an active goal
+  let goalName = getSessionGoal(sessionId);
+
+  // If not, try to claim the pending goal
+  if (!goalName) {
+    goalName = claimPendingGoal(sessionId);
   }
 
-  const goalName = activeGoal.name;
-  let ownerSession = activeGoal.ownerSession;
+  // No goal for this session — exit silently
+  if (!goalName) {
+    process.exit(0);
+  }
 
   // Find goal YAML
   const goalsDir = getGoalsDir();
@@ -58,19 +62,8 @@ async function main() {
 
   if (!existsSync(goalPath)) {
     approve('Goal definition not found. Allowing stop.');
-    cleanup(sessionId);
+    cleanupSession(sessionId);
     return;
-  }
-
-  // Session scoping: first session to hit claims it
-  if (!ownerSession) {
-    claimSession(sessionId);
-    ownerSession = sessionId;
-  }
-
-  // Different session? Don't interfere
-  if (sessionId !== ownerSession) {
-    process.exit(0);
   }
 
   // Iteration counting
@@ -88,7 +81,7 @@ async function main() {
   // Over iteration limit?
   if (iterations > maxIterations) {
     approve(`Reached iteration limit (${maxIterations}). Allowing stop to prevent infinite loop.`);
-    cleanup(sessionId);
+    cleanupSession(sessionId);
     return;
   }
 
@@ -109,7 +102,7 @@ async function main() {
   for (const phrase of stuckPhrases) {
     if (lowerTranscript.includes(phrase.toLowerCase())) {
       approve('Claude indicated being stuck or explicitly requested to stop.');
-      cleanup(sessionId);
+      cleanupSession(sessionId);
       return;
     }
   }
@@ -156,7 +149,7 @@ async function main() {
     for (const phrase of successPhrases) {
       if (lowerTranscript.includes(phrase.toLowerCase())) {
         approve('Verification appears complete.');
-        cleanup(sessionId);
+        cleanupSession(sessionId);
         return;
       }
     }
@@ -164,7 +157,7 @@ async function main() {
 
   // Default: allow after verification phase
   approve('Verification phase complete.');
-  cleanup(sessionId);
+  cleanupSession(sessionId);
 }
 
 main().catch((err) => {
