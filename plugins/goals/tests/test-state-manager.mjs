@@ -6,7 +6,7 @@
  * Verifies the two-phase activation model: pending-goal files (written by
  * commands) and active-goal-{sessionId} files (written by hooks).
  *
- * Run: node plugins/goals/scripts/test-state-manager.mjs
+ * Run: node plugins/goals/tests/test-state-manager.mjs
  */
 
 import { mkdtempSync, existsSync, writeFileSync, readFileSync, mkdirSync, readdirSync, rmSync } from 'fs';

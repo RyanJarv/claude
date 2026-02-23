@@ -10,7 +10,7 @@
  * - /goals:start writes a pending-goal file
  * - /goals:list and /goals:status use the new multi-session API
  *
- * Run: node plugins/goals/scripts/test-goal-engine.mjs
+ * Run: node plugins/goals/tests/test-goal-engine.mjs
  */
 
 import { mkdtempSync, existsSync, writeFileSync, readFileSync, mkdirSync, readdirSync, rmSync, unlinkSync } from 'fs';
