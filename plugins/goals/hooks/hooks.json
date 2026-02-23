@@ -6,7 +6,7 @@
           {
             "type": "command",
             "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/goal-engine.mjs",
-            "timeout": 120
+            "timeout": 300
           }
         ]
       }

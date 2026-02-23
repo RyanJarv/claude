@@ -12,8 +12,9 @@ function execCommand(cmd, timeoutSec = 30) {
       stdio: ['pipe', 'pipe', 'pipe'],
       shell: true,
     }).trim();
-  } catch {
-    return '';
+  } catch (err) {
+    const out = (err.stdout?.toString() || '') + (err.stderr?.toString() || '');
+    return out.trim() || '';
   }
 }
 
